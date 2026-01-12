@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  tag: "dev"
+
+resources:
+  requests:
+    memory: "32Mi"
+    cpu: "50m"
+  limits:
+    memory: "64Mi"
+    cpu: "100m"
+
+configMap:
+  data:
+    APP_ENV: "development"
+    LOG_LEVEL: "debug"
+

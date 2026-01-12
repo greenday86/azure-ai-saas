@@ -1,4 +1,4 @@
-import { architectRecommendations, getServiceById, Service } from '../data/services';
+import { architectRecommendations, getServiceById } from '../data/services';
 
 interface ArchitectRecommendationsProps {
   selectedServiceId?: string;
