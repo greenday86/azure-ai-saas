@@ -88,7 +88,7 @@ nginxConfigMap:
 # Envoy Gateway HTTPRoute
 httpRoute:
   enabled: true
-  hostname: ""  # 선택사항: 도메인 설정
+  hostname: "azure-web.dev.local"  # 도메인 설정
   path: "/"
   pathType: PathPrefix
 
