@@ -81,6 +81,10 @@ configMap:
     LOG_LEVEL: "info"
     APP_NAME: "Azure AI SaaS"
 
+# Nginx ConfigMap (nginx.conf를 ConfigMap으로 관리)
+nginxConfigMap:
+  enabled: true
+
 # Envoy Gateway HTTPRoute
 httpRoute:
   enabled: true

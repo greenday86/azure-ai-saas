@@ -17,16 +17,12 @@ RUN test -f /app/dist/index.html
 FROM nginx:1.25-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# nginx.conf는 ConfigMap으로 관리하므로 여기서는 복사하지 않음
+# COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # non-root 런타임 경로를 /tmp로 통일
-RUN mkdir -p /tmp/nginx \
- && chown -R nginx:nginx /tmp/nginx /usr/share/nginx/html /etc/nginx/conf.d \
- && (grep -q "^pid " /etc/nginx/nginx.conf && \
-     sed -i 's|^pid .*;|pid /tmp/nginx.pid;|g' /etc/nginx/nginx.conf || \
-     sed -i '1ipid /tmp/nginx.pid;' /etc/nginx/nginx.conf) \
- && printf "\nclient_body_temp_path /tmp/nginx/client_body;\nproxy_temp_path /tmp/nginx/proxy;\nfastcgi_temp_path /tmp/nginx/fastcgi;\nuwsgi_temp_path /tmp/nginx/uwsgi;\nscgi_temp_path /tmp/nginx/scgi;\n" \
-    > /etc/nginx/conf.d/zz-temp-paths.conf \
+# nginx.conf는 ConfigMap으로 마운트되므로, 여기서는 기본 설정만 준비
+RUN chown -R nginx:nginx /usr/share/nginx/html \
  && find /usr/share/nginx/html -name "*.map" -delete
 
 EXPOSE 8080
