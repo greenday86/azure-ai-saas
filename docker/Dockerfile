@@ -29,6 +29,6 @@ RUN mkdir -p /tmp/nginx \
     > /etc/nginx/conf.d/zz-temp-paths.conf \
  && find /usr/share/nginx/html -name "*.map" -delete
 
-EXPOSE 80
+EXPOSE 8080
 USER nginx
 CMD ["nginx", "-g", "daemon off;"]

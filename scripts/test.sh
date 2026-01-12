@@ -8,7 +8,7 @@ echo "Building Docker image for testing..."
 docker build -f docker/Dockerfile -t azure-ai-saas:${IMAGE_TAG} .
 
 echo "Starting container..."
-docker run -d -p 8080:80 --name ${CONTAINER_NAME} azure-ai-saas:${IMAGE_TAG}
+docker run -d -p 8080:8080 --name ${CONTAINER_NAME} azure-ai-saas:${IMAGE_TAG}
 
 echo "Waiting for container to start..."
 sleep 3
