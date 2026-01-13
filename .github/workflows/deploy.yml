@@ -54,11 +54,13 @@ jobs:
         output: 'trivy-fs-results.sarif'
         severity: 'CRITICAL,HIGH'
 
-    - name: Upload Trivy results to GitHub Security
+    - name: Upload Trivy fs results to GitHub Security
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-fs-results.sarif'
+        # Category 구분 (filesystem, image)
+        category: 'trivy-fs'
 
     - name: Log in to Azure
       uses: azure/login@v1
@@ -95,11 +97,13 @@ jobs:
         output: 'trivy-image-results.sarif'
         severity: 'CRITICAL,HIGH'
 
-    - name: Upload image scan results
+    - name: Upload Trivy image scan results
+    # Image SARIF는 있을 때만 업로드
+      if: ${{ hashFiles('trivy-image-results.sarif') != '' }}
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
       with:
         sarif_file: 'trivy-image-results.sarif'
+        category: 'trivy-image'
 
   deploy:
     needs: build-and-scan
