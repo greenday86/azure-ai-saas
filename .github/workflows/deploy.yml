@@ -108,6 +108,7 @@ jobs:
   deploy:
     needs: build-and-scan
     runs-on: ubuntu-latest
+    # Develop 브랜치에서는 배포하지 않음
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     steps:
@@ -152,4 +153,3 @@ jobs:
       if: failure()
       run: |
         helm rollback azure-ai-saas -n ${{ env.NAMESPACE }} || true
-
