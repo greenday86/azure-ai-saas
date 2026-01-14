@@ -16,3 +16,7 @@ configMap:
     APP_ENV: "development"
     LOG_LEVEL: "debug"
 
+# Envoy Gateway HTTPRoute
+httpRoute:
+  enabled: true
+  hostname: "azure-web-dev.dev.local"  # 도메인 설정

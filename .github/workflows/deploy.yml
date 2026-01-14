@@ -14,7 +14,8 @@ env:
   IMAGE_NAME: azure-ai-saas
   AKS_CLUSTER_NAME: axdev-cluster-02
   AKS_RESOURCE_GROUP: skax-axdev-gp3
-  NAMESPACE: azure-ai-saas
+  NAMESPACE_DEV: azure-ai-saas-dev
+  NAMESPACE_PROD: azure-ai-saas
 
 jobs:
   build-and-scan:
@@ -105,10 +106,58 @@ jobs:
         sarif_file: 'trivy-image-results.sarif'
         category: 'trivy-image'
 
+  deploy-dev:
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: development
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Set AKS context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+        cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+    - name: Deploy to AKS using Helm (Development)
+      run: |
+        helm upgrade --install azure-ai-saas ./helm/azure-ai-saas \
+          --namespace ${{ env.NAMESPACE_DEV }} \
+          --create-namespace \
+          --values ./helm/azure-ai-saas/values.yaml \
+          --values ./helm/azure-ai-saas/values.dev.yaml \
+          --set image.repository=${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }} \
+          --set image.tag=${{ github.sha }} \
+          --wait \
+          --timeout 5m
+
+    - name: Verify deployment
+      run: |
+        kubectl rollout status deployment/azure-ai-saas -n ${{ env.NAMESPACE_DEV }} --timeout=5m
+        kubectl get pods -n ${{ env.NAMESPACE_DEV }}
+        kubectl get svc -n ${{ env.NAMESPACE_DEV }}
+        kubectl get httproute -n ${{ env.NAMESPACE_DEV }}
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        helm rollback azure-ai-saas -n ${{ env.NAMESPACE_DEV }} || true
+
   deploy:
     needs: build-and-scan
     runs-on: ubuntu-latest
-    # Develop 브랜치에서는 배포하지 않음
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     steps:
@@ -131,12 +180,13 @@ jobs:
         resource-group: ${{ env.AKS_RESOURCE_GROUP }}
         cluster-name: ${{ env.AKS_CLUSTER_NAME }}
 
-    - name: Deploy to AKS using Helm
+    - name: Deploy to AKS using Helm (Production)
       run: |
         helm upgrade --install azure-ai-saas ./helm/azure-ai-saas \
-          --namespace ${{ env.NAMESPACE }} \
+          --namespace ${{ env.NAMESPACE_PROD }} \
           --create-namespace \
           --values ./helm/azure-ai-saas/values.yaml \
+          --values ./helm/azure-ai-saas/values.prod.yaml \
           --set image.repository=${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME }} \
           --set image.tag=${{ github.sha }} \
           --wait \
@@ -144,12 +194,12 @@ jobs:
 
     - name: Verify deployment
       run: |
-        kubectl rollout status deployment/azure-ai-saas -n ${{ env.NAMESPACE }} --timeout=5m
-        kubectl get pods -n ${{ env.NAMESPACE }}
-        kubectl get svc -n ${{ env.NAMESPACE }}
-        kubectl get httproute -n ${{ env.NAMESPACE }}
+        kubectl rollout status deployment/azure-ai-saas -n ${{ env.NAMESPACE_PROD }} --timeout=5m
+        kubectl get pods -n ${{ env.NAMESPACE_PROD }}
+        kubectl get svc -n ${{ env.NAMESPACE_PROD }}
+        kubectl get httproute -n ${{ env.NAMESPACE_PROD }}
 
     - name: Rollback on failure
       if: failure()
       run: |
-        helm rollback azure-ai-saas -n ${{ env.NAMESPACE }} || true
+        helm rollback azure-ai-saas -n ${{ env.NAMESPACE_PROD }} || true
