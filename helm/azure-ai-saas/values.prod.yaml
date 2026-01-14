@@ -16,3 +16,7 @@ autoscaling:
   minReplicas: 3
   maxReplicas: 10
 
+# Envoy Gateway HTTPRoute
+httpRoute:
+  enabled: true
+  hostname: "azure-web.dev.local"  # 도메인 설정
