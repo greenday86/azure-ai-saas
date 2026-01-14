@@ -11,7 +11,9 @@ spec:
   - name: eg
     namespace: envoy-gateway-system
   hostnames:
-  - azure-web.dev.local
+  {{- if .Values.httpRoute.hostname }}
+  - {{ .Values.httpRoute.hostname }}
+  {{- end }}
   rules:
   - matches:
     - path:
@@ -21,4 +23,3 @@ spec:
     - name: {{ include "azure-ai-saas.name" . }}-service
       port: {{ .Values.service.port }}
 {{- end }}
-
