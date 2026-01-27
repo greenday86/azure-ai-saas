@@ -1,20 +1,33 @@
-import { architectRecommendations, getServiceById } from '../data/services';
+import { architectRecommendations, getServiceById, Provider } from '../data/services';
 
 interface ArchitectRecommendationsProps {
   selectedServiceId?: string;
+  selectedProvider?: Provider | 'all';
   onServiceClick?: (serviceId: string) => void;
 }
 
 export const ArchitectRecommendations = ({ 
   selectedServiceId, 
+  selectedProvider = 'all',
   onServiceClick 
 }: ArchitectRecommendationsProps) => {
   // 특정 서비스가 선택된 경우, 해당 서비스가 추천되는 시나리오만 표시
-  const displayRecommendations = selectedServiceId
+  let displayRecommendations = selectedServiceId
     ? architectRecommendations.filter(rec => 
         rec.recommendedServices.includes(selectedServiceId)
       )
     : architectRecommendations;
+
+  // 프로바이더 필터링
+  if (selectedProvider !== 'all') {
+    displayRecommendations = displayRecommendations.map(rec => ({
+      ...rec,
+      recommendedServices: rec.recommendedServices.filter(serviceId => {
+        const service = getServiceById(serviceId);
+        return service?.provider === selectedProvider;
+      })
+    })).filter(rec => rec.recommendedServices.length > 0);
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
@@ -54,18 +67,36 @@ export const ArchitectRecommendations = ({
                 if (!service) return null;
                 
                 const isSelected = selectedServiceId === serviceId;
+                const providerColors = {
+                  aws: 'bg-orange-100 text-orange-700',
+                  azure: 'bg-blue-100 text-blue-700',
+                  gcp: 'bg-red-100 text-red-700'
+                };
+                
+                // 서비스 이름에서 프로바이더 접두사 제거
+                const displayName = service.name
+                  .replace('Azure ', '')
+                  .replace('Amazon ', '')
+                  .replace('Cloud ', '');
                 
                 return (
                   <button
                     key={serviceId}
                     onClick={() => onServiceClick?.(serviceId)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1 ${
                       isSelected
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : `bg-gray-100 text-gray-700 hover:bg-gray-200`
                     }`}
                   >
-                    {service.name.replace('Azure ', '')}
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      isSelected 
+                        ? 'bg-white/20 text-white' 
+                        : providerColors[service.provider]
+                    }`}>
+                      {service.provider.toUpperCase()}
+                    </span>
+                    {displayName}
                   </button>
                 );
               })}

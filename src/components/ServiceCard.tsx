@@ -10,6 +10,12 @@ export const ServiceCard = ({ service, onRecommendationClick, isSelected = false
   const scenarios = getScenariosForService(service.id);
   const recommendationCount = scenarios.length;
 
+  const providerColors = {
+    aws: 'bg-orange-100 text-orange-700 border-orange-300',
+    azure: 'bg-blue-100 text-blue-700 border-blue-300',
+    gcp: 'bg-red-100 text-red-700 border-red-300'
+  };
+
   return (
     <div className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all p-6 border-2 relative ${
       isSelected 
@@ -17,7 +23,14 @@ export const ServiceCard = ({ service, onRecommendationClick, isSelected = false
         : 'border-gray-200'
     }`}>
       <div className="flex items-start justify-between mb-2">
-        <h3 className="text-xl font-bold text-gray-800">{service.name}</h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-xl font-bold text-gray-800">{service.name}</h3>
+            <span className={`px-2 py-1 text-xs rounded-full font-semibold border ${providerColors[service.provider]}`}>
+              {service.provider.toUpperCase()}
+            </span>
+          </div>
+        </div>
         {recommendationCount > 0 && (
           <button
             onClick={() => onRecommendationClick?.(service.id)}

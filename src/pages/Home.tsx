@@ -2,15 +2,21 @@ import { useState, useMemo } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { ServiceCard } from '../components/ServiceCard';
 import { ArchitectRecommendations } from '../components/ArchitectRecommendations';
-import { services, categories, getServiceById } from '../data/services';
+import { services, categories, getServiceById, Provider } from '../data/services';
 
 export const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedProvider, setSelectedProvider] = useState<Provider | 'all'>('all');
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(undefined);
   const [showRecommendations, setShowRecommendations] = useState<boolean>(true);
 
   const filteredServices = useMemo(() => {
     let filtered = services;
+
+    // 프로바이더 필터링
+    if (selectedProvider !== 'all') {
+      filtered = filtered.filter(service => service.provider === selectedProvider);
+    }
 
     // 카테고리 필터링
     if (selectedCategory !== 'All') {
@@ -23,7 +29,7 @@ export const Home = () => {
     }
 
     return filtered;
-  }, [selectedCategory, selectedServiceId]);
+  }, [selectedCategory, selectedProvider, selectedServiceId]);
 
   const handleServiceClick = (serviceId: string) => {
     if (selectedServiceId === serviceId) {
@@ -47,9 +53,9 @@ export const Home = () => {
       
       <main className="flex-1 p-8 max-w-7xl mx-auto">
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-800">
-              Azure AI 서비스
+              클라우드 AI 서비스 카탈로그
             </h1>
             <button
               onClick={() => setShowRecommendations(!showRecommendations)}
@@ -58,12 +64,69 @@ export const Home = () => {
               {showRecommendations ? '추천 숨기기' : '추천 보기'}
             </button>
           </div>
+          
+          {/* 프로바이더 선택 탭 */}
+          <div className="mb-4 flex gap-2">
+            <button
+              onClick={() => {
+                setSelectedProvider('all');
+                setSelectedServiceId(undefined);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedProvider === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              전체
+            </button>
+            <button
+              onClick={() => {
+                setSelectedProvider('aws');
+                setSelectedServiceId(undefined);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedProvider === 'aws'
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              AWS
+            </button>
+            <button
+              onClick={() => {
+                setSelectedProvider('azure');
+                setSelectedServiceId(undefined);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedProvider === 'azure'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              Azure
+            </button>
+            <button
+              onClick={() => {
+                setSelectedProvider('gcp');
+                setSelectedServiceId(undefined);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedProvider === 'gcp'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              GCP
+            </button>
+          </div>
+
           <p className="text-gray-600">
             {selectedServiceId
               ? `${getServiceById(selectedServiceId)?.name || '선택된 서비스'} (1개)`
-              : selectedCategory === 'All' 
+              : selectedCategory === 'All' && selectedProvider === 'all'
                 ? `전체 ${services.length}개의 서비스` 
-                : `${selectedCategory} 카테고리의 ${filteredServices.length}개 서비스`}
+                : `${filteredServices.length}개의 서비스`}
           </p>
         </div>
 
@@ -71,6 +134,7 @@ export const Home = () => {
           <div className="mb-8">
             <ArchitectRecommendations
               selectedServiceId={selectedServiceId}
+              selectedProvider={selectedProvider}
               onServiceClick={handleServiceClick}
             />
           </div>
